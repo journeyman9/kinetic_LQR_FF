@@ -12,7 +12,7 @@ cv = 80000;
 ch = 80000;
 is = 1; % steering ratio
 
-v = 10; %[m/s]
+v = 4.5; %[m/s]
 
 L = lv+lh;
 v_ch = sqrt((L.^2)*(cv*ch) / (m*(ch*lh - cv*lv)));
@@ -62,31 +62,21 @@ NN = G'*Q*H;
 
 [K S e] = lqr(sys, QQ, RR, NN);
 
-%% Set Point Control
-% Q_sp = [A, B; G, H];
-% [n, n] = size(A);
-% [l, p] = size(G); % number of controlled outputs
-% m = 1; % number of process inputs, or just inputs
-% M = pinv(Q_sp); % psuedo inverse if matrix not square
-% F = M(1:n, end-l+1:end);
-% N = M(end-m+1:end, end-l+1:end);
-
 %% Feedforward
 track_vector = csvread('t_lanechange.txt');
 s = track_vector(:, 5);
 t = s/v;
 curv = [t track_vector(:, 3)];
-psi_d = [t track_vector(:, 4)];
-% y_d = [t track_vector(:, 2)];
-y_d = [t zeros(length(psi_d), 1)];
+psi_r = [t track_vector(:, 4)];
+y_r = [t track_vector(:, 2)];
 
-Beta_d = psi_d;
-psid_d = y_d;
+Beta_r = [t 0*track_vector(:, 4)];
+psi_r_d = [t v*track_vector(:, 3)];
 
 sim_time = t(end, 1);
 
 %% Simulink
-y_IC = 1;
+y_IC = 0;
 % x = [Beta; psi_d; psi; d]
 ICs = [deg2rad(0) deg2rad(0) deg2rad(0) y_IC];
 vehicleIC = [track_vector(1,1)-y_IC*sin(ICs(2)) track_vector(1,2)+y_IC*cos(ICs(2))];
@@ -105,7 +95,7 @@ subplot 411
 plot(tout, rad2deg(Beta))
 hold on
 plot(tout, des(:, 1), '--r')
-ylabel('y_{e} [m]')
+ylabel('\beta [{\circ}]')
 hold off
 
 subplot 412
